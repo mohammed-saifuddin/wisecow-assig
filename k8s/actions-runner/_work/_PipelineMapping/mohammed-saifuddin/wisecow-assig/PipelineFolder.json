@@ -1,0 +1,12 @@
+﻿{
+  "repositoryName": "mohammed-saifuddin/wisecow-assig",
+  "pipelineDirectory": "wisecow-assig",
+  "workspaceDirectory": "wisecow-assig\\wisecow-assig",
+  "repositories": {
+    "mohammed-saifuddin/wisecow-assig": {
+      "repositoryPath": "wisecow-assig\\wisecow-assig",
+      "lastRunOn": "09/20/2025 17:31:58 +05:30"
+    }
+  },
+  "lastRunOn": "09/20/2025 17:46:14 +05:30"
+}

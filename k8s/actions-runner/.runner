@@ -1,0 +1,11 @@
+﻿{
+  "agentId": 22,
+  "agentName": "LAPTOP-F6M01O0M",
+  "poolId": 1,
+  "poolName": "Default",
+  "serverUrl": "https://pipelinesghubeus14.actions.githubusercontent.com/cluBm5foYVqtEeJXFx7mEgfvT6ZgcB15NkBJC9bXdZea2Ov7KF/",
+  "gitHubUrl": "https://github.com/mohammed-saifuddin/wisecow-assig",
+  "workFolder": "_work",
+  "useV2Flow": true,
+  "serverUrlV2": "https://broker.actions.githubusercontent.com/"
+}
