@@ -10,36 +10,65 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      # Step 1: Checkout repo
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Docker login
+      # Step 2: Login to Docker Hub
+      - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build & Push Docker Image
+      # Step 3: Build & Push Docker Image
+      - name: Build and Push Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/assignment-acc:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/assignment-acc:latest
-
-      - name: Install Minikube
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/wisecow:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/wisecow:latest
+      # Step 4: Install kubectl
+      - name: Install kubectl
+        shell: powershell
         run: |
-          Invoke-WebRequest -Uri "https://storage.googleapis.com/minikube/releases/latest/minikube-windows-amd64.exe" -OutFile "minikube.exe"
-          Move-Item .\minikube.exe "C:\Windows\minikube.exe"
-
-      - name: Start Minikube
-        run: |
-          minikube start --driver=docker --wait=true
-
+          Invoke-WebRequest -Uri https://dl.k8s.io/release/v1.29.0/bin/windows/amd64/kubectl.exe -OutFile kubectl.exe
+          $env:PATH += ";$PWD"
+          .\kubectl.exe version --client
+      # Step 5: Configure kubeconfig
       - name: Configure kubeconfig
+        shell: powershell
         run: |
-          minikube kubeconfig > $env:USERPROFILE\.kube\config
-          kubectl config get-contexts
-
+          $b64 = "${{ secrets.KUBECONFIG_DATA }}" -replace "`r`n","" -replace "\s",""
+          $decoded = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($b64))
+          $kubeDir = "$env:USERPROFILE\.kube"
+          if (-Not (Test-Path $kubeDir)) { New-Item -ItemType Directory -Force -Path $kubeDir }
+          Set-Content -Path "$kubeDir\config" -Value $decoded -Encoding utf8
+          .\kubectl.exe config get-contexts
+      # Step 6: Deploy to Kubernetes
       - name: Deploy to Kubernetes
+        shell: powershell
         run: |
-          kubectl apply -f k8s/deployment.yaml --validate=false
-          kubectl apply -f k8s/service.yaml --validate=false
-          kubectl apply -f k8s/ingress.yaml --validate=false
+          $namespace = "default"
+          Write-Host "Checking k8s folder contents..."
+          dir .\k8s\
+          Write-Host "Applying Deployment..."
+          .\kubectl.exe apply -f .\k8s\deployment.yaml -n $namespace
+          Start-Sleep -Seconds 5
+          # Delete existing service if it exists
+          try {
+              .\kubectl.exe get svc wisecow-service -n $namespace -ErrorAction Stop
+              Write-Host "Service exists. Deleting..."
+              .\kubectl.exe delete svc wisecow-service -n $namespace
+          } catch {
+              Write-Host "Service does not exist. Proceeding..."
+          }
+          # Apply NodePort service
+          Write-Host "Applying Service..."
+          $applyOutput = .\kubectl.exe apply -f .\k8s\service.yaml -n $namespace
+          Write-Host $applyOutput
+          Start-Sleep -Seconds 5
+          # Verify service
+          Write-Host "Current Services:"
+          .\kubectl.exe get svc -n $namespace -o wide
+          # Apply Ingress
+          Write-Host "Applying Ingress..."
+          .\kubectl.exe apply -f .\k8s\ingress.yaml -n $namespace
