@@ -24,16 +24,6 @@ jobs:
           docker build -t ${{ secrets.DOCKER_USERNAME }}/assignment-acc:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/assignment-acc:latest
 
-      - name: Install Minikube
-        run: |
-          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-          sudo install minikube-linux-amd64 /usr/local/bin/minikube
-
-      - name: Start Minikube
-        run: |
-          sudo minikube start
-          sudo minikube status
-
       - name: Set up kubectl
         uses: azure/setup-kubectl@v4
         with:
