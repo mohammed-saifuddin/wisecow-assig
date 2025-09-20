@@ -35,11 +35,12 @@ jobs:
           .\kubectl.exe version --client
       # Step 5: Configure kubeconfig
       - name: Configure kubeconfig
-        shell: powershell
-        run: |
-        mkdir -p ~/.kube 
-        echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > ~/.kube/config 
-        kubectl config get-contexts
+  shell: powershell
+  run: |
+  mkdir -p ~/.kube 
+  echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > ~/.kube/config 
+  kubectl config get-contexts
+
         
       # Step 6: Deploy to Kubernetes
       - name: Deploy to Kubernetes
