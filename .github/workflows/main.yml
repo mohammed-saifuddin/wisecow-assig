@@ -24,16 +24,19 @@ jobs:
           docker build -t ${{ secrets.DOCKER_USERNAME }}/assignment-acc:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/assignment-acc:latest
 
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v4
-        with:
-          version: 'v1.29.0'
+      - name: Install Minikube
+        run: |
+          Invoke-WebRequest -Uri "https://storage.googleapis.com/minikube/releases/latest/minikube-windows-amd64.exe" -OutFile "minikube.exe"
+          Move-Item .\minikube.exe "C:\Windows\minikube.exe"
 
-      # - name: Configure kubeconfig
-      #   run: |
-      #     mkdir -p ~/.kube
-      #     sudo minikube kubeconfig > ~/.kube/config
-      #     kubectl config get-contexts
+      - name: Start Minikube
+        run: |
+          minikube start --driver=docker --wait=true
+
+      - name: Configure kubeconfig
+        run: |
+          minikube kubeconfig > $env:USERPROFILE\.kube\config
+          kubectl config get-contexts
 
       - name: Deploy to Kubernetes
         run: |
