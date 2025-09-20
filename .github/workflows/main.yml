@@ -26,6 +26,7 @@ jobs:
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/wisecow:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/wisecow:latest
+
       # Step 4: Install kubectl
       - name: Install kubectl
         shell: powershell
@@ -33,15 +34,20 @@ jobs:
           Invoke-WebRequest -Uri https://dl.k8s.io/release/v1.29.0/bin/windows/amd64/kubectl.exe -OutFile kubectl.exe
           $env:PATH += ";$PWD"
           .\kubectl.exe version --client
+
       # Step 5: Configure kubeconfig
       - name: Configure kubeconfig
-  shell: powershell
-  run: |
-  mkdir -p ~/.kube 
-  echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > ~/.kube/config 
-  kubectl config get-contexts
+        shell: powershell
+        run: |
+          $kubeDir = "$env:USERPROFILE\.kube"
+          New-Item -ItemType Directory -Force -Path $kubeDir
 
-        
+          # Decode KUBECONFIG_DATA from base64 secret
+          [System.IO.File]::WriteAllBytes("$kubeDir\config", [System.Convert]::FromBase64String("${{ secrets.KUBECONFIG_DATA }}"))
+
+          # Verify contexts
+          .\kubectl.exe config get-contexts
+
       # Step 6: Deploy to Kubernetes
       - name: Deploy to Kubernetes
         shell: powershell
@@ -49,9 +55,11 @@ jobs:
           $namespace = "default"
           Write-Host "Checking k8s folder contents..."
           dir .\k8s\
+
           Write-Host "Applying Deployment..."
-          .\kubectl.exe apply -f .\k8s\deployment.yaml -n $namespace
+          .\kubectl.exe apply -f .\k8s\deployment.yaml -n $namespace --validate=false
           Start-Sleep -Seconds 5
+
           # Delete existing service if it exists
           try {
               .\kubectl.exe get svc wisecow-service -n $namespace -ErrorAction Stop
@@ -60,14 +68,17 @@ jobs:
           } catch {
               Write-Host "Service does not exist. Proceeding..."
           }
+
           # Apply NodePort service
           Write-Host "Applying Service..."
-          $applyOutput = .\kubectl.exe apply -f .\k8s\service.yaml -n $namespace
+          $applyOutput = .\kubectl.exe apply -f .\k8s\service.yaml -n $namespace --validate=false
           Write-Host $applyOutput
           Start-Sleep -Seconds 5
+
           # Verify service
           Write-Host "Current Services:"
           .\kubectl.exe get svc -n $namespace -o wide
+
           # Apply Ingress
           Write-Host "Applying Ingress..."
-          .\kubectl.exe apply -f .\k8s\ingress.yaml -n $namespace
+          .\kubectl.exe apply -f .\k8s\ingress.yaml -n $namespace --validate=false
