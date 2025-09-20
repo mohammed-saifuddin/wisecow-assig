@@ -29,11 +29,11 @@ jobs:
         with:
           version: 'v1.29.0'
 
-      - name: Configure kubeconfig
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > ~/.kube/config
-          kubectl config get-contexts
+      # - name: Configure kubeconfig
+      #   run: |
+      #     mkdir -p ~/.kube
+      #     echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > ~/.kube/config
+      #     kubectl config get-contexts
 
       - name: Deploy to Kubernetes
         run: |
