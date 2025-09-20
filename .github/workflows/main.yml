@@ -23,7 +23,10 @@ jobs:
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/assignment-acc:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/assignment-acc:latest
-
+     - name: Start Minikube
+        run: |
+          minikube start
+          minikube status
       - name: Set up kubectl
         uses: azure/setup-kubectl@v4
         with:
