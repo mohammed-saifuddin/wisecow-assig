@@ -1,53 +1,94 @@
+Wisecow DevOps Cheat Sheet – One-Stop Commands
+1️⃣ Clone Repository
+git clone https://github.com/nyrahul/wisecow.git
+cd wisecow
 
-# ==========================================
-# Wisecow DevOps One-File Setup Script
-# Docker, Kubernetes, TLS, CI/CD, Health Scripts
-# ==========================================
+2️⃣ Docker Commands
+# Build Docker image
+docker build -t <dockerhub-username>/wisecow:latest .
 
-# === Step 0: Variables ===
-DOCKER_USERNAME="<dockerhub-username>"
-GITHUB_REPO="https://github.com/nyrahul/wisecow.git"
-WORKDIR="wisecow"
+# Run Docker container locally (optional)
+docker run -p 3000:3000 <dockerhub-username>/wisecow:latest
 
-# === Step 1: Clone the Repository ===
-git clone $GITHUB_REPO
-cd $WORKDIR
-
-
-# === Step 3: Build Docker Image ===
-docker build -t $DOCKER_USERNAME/wisecow:latest .
-
-# === Step 4: Run Docker Container Locally (Optional) ===
-# docker run -p 3000:3000 $DOCKER_USERNAME/wisecow:latest
-
-# === Step 5: Push Docker Image to Docker Hub ===
+# Log in to Docker Hub
 docker login
-docker push $DOCKER_USERNAME/wisecow:latest
 
-# === Step 6: Kubernetes Manifests Directory ===
-mkdir -p k8s
+# Push image to Docker Hub
+docker push <dockerhub-username>/wisecow:latest
 
-
-# === Step 7: Start Minikube ===
+3️⃣ Kubernetes & Minikube
+# Start Minikube
 minikube start
 
-# === Step 8: Apply Kubernetes Manifests ===
+# Verify cluster
+kubectl cluster-info
+kubectl get nodes
+
+# Apply deployment and service manifests
 kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/service.yaml
 
-# === Step 9: TLS Certificate ===
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=wisecow.local"
-
-# === Step 10: Create Kubernetes TLS Secret ===
-kubectl create secret tls wisecow-tls --cert=tls.crt --key=tls.key
-
-# === Step 11: Verify Pods and Service ===
+# Check pods and services
 kubectl get pods
 kubectl get svc
 
+# Access NodePort service (optional)
+minikube service wisecow-service
 
- 
+4️⃣ TLS Setup
+# Generate self-signed certificate
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=wisecow.local"
 
+# Create Kubernetes TLS secret
+kubectl create secret tls wisecow-tls --cert=tls.crt --key=tls.key
+
+5️⃣ GitHub Actions CI/CD
+# Add GitHub secrets in repo settings: DOCKER_USERNAME, DOCKER_PASSWORD, KUBECONFIG
+
+# Push workflow file
+git add .github/workflows/main.yaml
+git commit -m "Add CI/CD workflow"
+git push origin main
+
+
+GitHub Actions will automatically:
+
+Build Docker image
+
+Push to Docker Hub
+
+Deploy to Kubernetes
+
+6️⃣ System & Application Health Scripts
+# Make system health script executable
 chmod +x scripts/system_health.sh
 
+# Run system health check
+./scripts/system_health.sh
 
+# Install Python requests (if not installed)
+pip install requests
+
+# Run application health checker
+python3 scripts/app_health_check.py
+
+7️⃣ Optional: KubeArmor Policy
+# Install KubeArmor
+kubectl apply -f https://kubearmor.com/deploy/kubearmor.yaml
+
+# Apply zero-trust policy
+kubectl apply -f policy/policy-deny-exec.yaml
+
+# Test policy violations
+kubectl exec -it <wisecow-pod-name> -- /bin/bash
+# Run blocked commands to verify enforcement
+
+✅ Notes
+
+Replace <dockerhub-username> with your Docker Hub username.
+
+Make sure GitHub secrets are correctly set before pushing workflow.
+
+NodePort exposes your app via Minikube IP:NodePort (e.g., http://<minikube-ip>:32000).
+
+Optional: Use TLS to access via HTTPS.
