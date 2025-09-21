@@ -1,4 +1,4 @@
-Wisecow DevOps Cheat Sheet – One-Stop Commands
+**Wisecow DevOps Trainee Practical Assessment**
 1️⃣ Clone Repository
 git clone https://github.com/nyrahul/wisecow.git
 cd wisecow
