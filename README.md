@@ -2,7 +2,7 @@
 
 1️⃣ Clone Repository
 
-`git clone https://github.com/mohammed-saifuddin/wisecow-assig.git`
+``git clone https://github.com/mohammed-saifuddin/wisecow-assig.git``
 
 cd wisecow-assig
 
