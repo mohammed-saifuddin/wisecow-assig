@@ -1,28 +1,53 @@
-# Cow wisdom web server
 
-## Prerequisites
+# ==========================================
+# Wisecow DevOps One-File Setup Script
+# Docker, Kubernetes, TLS, CI/CD, Health Scripts
+# ==========================================
 
-```
-sudo apt install fortune-mod cowsay -y
-```
+# === Step 0: Variables ===
+DOCKER_USERNAME="<dockerhub-username>"
+GITHUB_REPO="https://github.com/nyrahul/wisecow.git"
+WORKDIR="wisecow"
 
-## How to use?
+# === Step 1: Clone the Repository ===
+git clone $GITHUB_REPO
+cd $WORKDIR
 
-1. Run `./wisecow.sh`
-2. Point the browser to server port (default 4499)
 
-## What to expect?
-![wisecow](https://github.com/nyrahul/wisecow/assets/9133227/8d6bfde3-4a5a-480e-8d55-3fef60300d98)
+# === Step 3: Build Docker Image ===
+docker build -t $DOCKER_USERNAME/wisecow:latest .
 
-# Problem Statement
-Deploy the wisecow application as a k8s app
+# === Step 4: Run Docker Container Locally (Optional) ===
+# docker run -p 3000:3000 $DOCKER_USERNAME/wisecow:latest
 
-## Requirement
-1. Create Dockerfile for the image and corresponding k8s manifest to deploy in k8s env. The wisecow service should be exposed as k8s service.
-2. Github action for creating new image when changes are made to this repo
-3. [Challenge goal]: Enable secure TLS communication for the wisecow app.
+# === Step 5: Push Docker Image to Docker Hub ===
+docker login
+docker push $DOCKER_USERNAME/wisecow:latest
 
-## Expected Artifacts
-1. Github repo containing the app with corresponding dockerfile, k8s manifest, any other artifacts needed.
-2. Github repo with corresponding github action.
-3. Github repo should be kept private and the access should be enabled for following github IDs: nyrahul
+# === Step 6: Kubernetes Manifests Directory ===
+mkdir -p k8s
+
+
+# === Step 7: Start Minikube ===
+minikube start
+
+# === Step 8: Apply Kubernetes Manifests ===
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+
+# === Step 9: TLS Certificate ===
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=wisecow.local"
+
+# === Step 10: Create Kubernetes TLS Secret ===
+kubectl create secret tls wisecow-tls --cert=tls.crt --key=tls.key
+
+# === Step 11: Verify Pods and Service ===
+kubectl get pods
+kubectl get svc
+
+
+ 
+
+chmod +x scripts/system_health.sh
+
+
