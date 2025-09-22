@@ -10,7 +10,7 @@ cd wisecow-assig
 
 ** Build Docker image**
 
-`docker build -t <dockerhub-username>/wisecow:latest . `
+`docker build -t saifuddin337/wisecow:latest . `
 
 
  ****Run Docker container locally ****
